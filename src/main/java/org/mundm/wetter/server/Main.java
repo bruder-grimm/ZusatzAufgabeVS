@@ -11,5 +11,9 @@ public class Main {
 
         WeatherServer weatherServer = new WeatherServer(weatherProvider);
         weatherServer.start();
+
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(weatherServer::stop)
+        );
     }
 }

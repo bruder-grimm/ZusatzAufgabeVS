@@ -1,5 +1,6 @@
 package org.mundm.wetter.server;
 
+import org.mundm.wetter.Weather;
 import org.mundm.wetter.util.DateTimeHelper;
 import org.mundm.wetter.util.trie.Try;
 
@@ -20,19 +21,6 @@ public class WeatherProvider {
     public WeatherProvider(String city, DateTimeHelper dateTimeHelper) {
         this.city = city;
         this.dateTimeHelper = dateTimeHelper;
-    }
-
-    public class Weather {
-        public LocalDateTime getHour() { return hour; }
-        public double getTemperature() { return temperature; }
-
-        private LocalDateTime hour;
-        private double temperature;
-
-        Weather(LocalDateTime hour, double temperature) {
-            this.hour = hour;
-            this.temperature = temperature;
-        }
     }
 
     Try<List<Weather>> getWeatherFor(LocalDate date) {
