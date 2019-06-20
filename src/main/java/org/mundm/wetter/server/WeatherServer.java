@@ -1,5 +1,6 @@
 package org.mundm.wetter.server;
 
+import org.mundm.wetter.server.WeatherProvider.Weather;
 import org.mundm.wetter.util.DateTimeHelper;
 import org.mundm.wetter.util.trie.Try;
 
@@ -16,15 +17,13 @@ public class WeatherServer {
 
     private boolean running;
     private WeatherProvider weatherProvider;
-    private DateTimeHelper dateTimeHelper;
 
-    public WeatherServer(WeatherProvider weatherProvider, DateTimeHelper dateTimeHelper) {
+    WeatherServer(WeatherProvider weatherProvider) {
         this.running = true;
         this.weatherProvider = weatherProvider;
-        this.dateTimeHelper = dateTimeHelper;
     }
 
-    public void run() throws IOException {
+    void start() throws IOException {
         ServerSocket serving = new ServerSocket(4040);
 
         while (running) {
@@ -36,12 +35,22 @@ public class WeatherServer {
             Try<LocalDate> request = Try.applyThrowing(() -> (LocalDate) in.readObject());
 
             Runnable handleRequest = () -> {
-                request.flatMap(date -> Try.applyThrowing(() -> {
-                    Try<List<WeatherProvider.Weather>> result = weatherProvider.getWeatherFor(date);
-                    out.writeObject(request);
-                    return result;
-                }));
+                Try<List<Weather>> result = request.flatMap(weatherProvider::getWeatherFor);
+                try {
+                    out.writeObject(result);
+                } catch (IOException e) {
+                    System.out.println(
+                            String.format(
+                                    "%s: Couldn't send response to client: %s \n Response was: %s",
+                                    Thread.currentThread().getName(),
+                                    e.getMessage(),
+                                    result.toString()
+                            ));
+
+                }
             };
+
+            new Thread(handleRequest).start();
         }
     }
 }

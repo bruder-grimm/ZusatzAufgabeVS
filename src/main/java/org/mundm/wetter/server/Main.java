@@ -1,7 +1,15 @@
 package org.mundm.wetter.server;
 
-public class Main {
-    public static void main(String argv[]) throws Exception {
+import org.mundm.wetter.util.DateTimeHelper;
 
+import java.time.ZoneId;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        DateTimeHelper dateTimeHelper = new DateTimeHelper(ZoneId.systemDefault());
+        WeatherProvider weatherProvider = new WeatherProvider("berlin", dateTimeHelper);
+
+        WeatherServer weatherServer = new WeatherServer(weatherProvider);
+        weatherServer.start();
     }
 }

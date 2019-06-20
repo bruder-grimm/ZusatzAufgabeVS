@@ -17,6 +17,11 @@ public class WeatherProvider {
     private String city;
     private DateTimeHelper dateTimeHelper;
 
+    public WeatherProvider(String city, DateTimeHelper dateTimeHelper) {
+        this.city = city;
+        this.dateTimeHelper = dateTimeHelper;
+    }
+
     public class Weather {
         public LocalDateTime getHour() { return hour; }
         public double getTemperature() { return temperature; }
