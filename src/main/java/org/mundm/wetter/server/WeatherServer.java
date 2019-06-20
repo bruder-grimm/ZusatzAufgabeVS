@@ -12,11 +12,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class WeatherServer {
-    private boolean running;
-    public boolean isRunning() { return running; }
-    public void setRunning(boolean running) { this.running = running; }
-
     private WeatherProvider weatherProvider;
+
+    private boolean running;
 
     private ServerSocket serving;
     private Socket connectionSocket;
@@ -34,10 +32,10 @@ public class WeatherServer {
         connectionSocket = serving.accept();
         System.out.println("Connection established");
 
-        in = new ObjectInputStream(connectionSocket.getInputStream());
         out = new ObjectOutputStream(connectionSocket.getOutputStream());
+        in = new ObjectInputStream(connectionSocket.getInputStream());
 
-        while (isRunning()) {
+        while (running) {
             System.out.println("Waiting for request");
             Try<LocalDate> request = Try.applyThrowing(() -> (LocalDate) in.readObject());
             System.out.println("Received object from socket");
@@ -85,4 +83,7 @@ public class WeatherServer {
                     ));
         }
     }
+
+    public boolean isRunning() { return running; }
+    public void setRunning(boolean running) { this.running = running; }
 }
