@@ -1,39 +1,51 @@
 package org.mundm.wetter.server;
 
-import java.net.URL;
+import org.mundm.wetter.util.trie.Try;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class WeatherProvider {
+    private static final int TIMESTAMP_POS = 2;
+    private static final int TEMP_POS = 3;
     private String city;
-    private String countryCode;
-
-    private String assembleUrl(String city, String countryCode, LocalDate day) {
-        long startOfDay = day.atStartOfDay().toInstant(ZoneOffset.UTC).getEpochSecond();
-        long endOfDay = startOfDay + 60 * 60 * 24; // end of day
-        return String.format(
-                "http://history.openweathermap.org/data/2.5/history/city?q=%s,%s&type=hour&start=%s&cnt=%s",
-                city,
-                countryCode,
-                startOfDay,
-                endOfDay
-        );
-    }
 
     class Weather {
+        public LocalDateTime getHour() { return hour; }
+        public double getTemperature() { return temperature; }
+
         private LocalDateTime hour;
         private double temperature;
 
-        public Weather(LocalDateTime hour, double temperature) {
+        Weather(LocalDateTime hour, double temperature) {
             this.hour = hour;
             this.temperature = temperature;
         }
     }
 
-    public List<Weather> getWeatherFor(LocalDate date) {
-        String url = assembleUrl(this.city, this.countryCode, date);
-        new URL(url).openConnection();
+    Try<List<Weather>> getWeatherFor(LocalDate date) {
+        Try<Stream<String>> stream = Try.applyThrowing(() ->
+                Files.lines(Paths.get(String.format("%s.csv", city)))
+        );
+
+        return stream.map(lines ->
+                lines.map(line -> {
+                    String[] weatherData = line.split(",");
+
+                    double temperature =  Double.parseDouble(weatherData[TEMP_POS]);
+                    LocalDateTime dayAndHour = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(Long.parseLong(weatherData[TIMESTAMP_POS])), ZoneId.systemDefault()
+                    );
+
+                    return new Weather(dayAndHour, temperature);
+                }).collect(Collectors.toList())
+        );
     }
 }
